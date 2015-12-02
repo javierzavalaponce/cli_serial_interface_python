@@ -4,6 +4,7 @@ import serial
 import threading
 import time
 import Queue 
+import datetime
 baudrate = 115200
 quitflag = False
 
@@ -58,11 +59,13 @@ else:
     sys.exit()
 
 def print_menu():
+    print "====================================="
     for item in menu:
         print item,
         print ") ",
         print menu[item]
-    print "====================================="
+    print "Select option: "
+    
 
 
 ###############################
@@ -74,18 +77,19 @@ def read_keyboard():
     global quitflag
     while (quitflag == False):
         print_menu()
-        user_input= raw_input('Select option :')
+        user_input= raw_input()
         if (user_input == ""):
             continue
         #read only first character typed by user
         if user_input[0] in menu:
             print menu[user_input[0]]
-            if (user_input[0] == QUIT):
+            if (user_input[0] != QUIT):
+                q.put(user_input[0])
+            else:
                 quitflag = True
         else:
             print "====================================="
             print("invalid input")
-            print "====================================="
             continue
 
 ###############################
@@ -94,11 +98,19 @@ def read_keyboard():
 def read_serial():
     global quitflag
     while (quitflag == False):
-        line = ser.readline()
-        if( line == ""):
+        data_read_from_serial_port = ser.readline()
+        if( data_read_from_serial_port == ""):
             continue
         else:
-            print line
+            date = datetime.datetime.now()
+            day=str(date.day).rjust(2,'0')
+            month=str(date.month).rjust(2,'0')
+            year=str(date.year)
+            hour=str(date.hour).rjust(2,'0')
+            minute=str(date.minute).rjust(2,'0')
+            second=str(date.second).rjust(2,'0')
+            log_time=month+day+year+"_"+hour+minute+second
+            print "["+log_time+"]"+" : "+data_read_from_serial_port
 
 ###############################
 #  thread to write to serial
@@ -106,8 +118,10 @@ def read_serial():
 def write_serial():
     global quitflag
     while (quitflag == False):
-        #ser.write("serial_data_sent\n")
-        time.sleep(1)
+        if q.empty() == False:
+            data = q.get()
+            ser.write(data+"\n")
+        #time.sleep(1)
         
 ###############################
 #  create threads
