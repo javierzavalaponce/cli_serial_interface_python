@@ -3,18 +3,37 @@ import datetime
 import serial
 import threading
 import time
-
+import Queue 
 baudrate = 115200
 quitflag = False
 
+###############################
+#  create a global queue to
+#  process users requests
+###############################
+q = Queue.Queue()
+###############################
+#  options for user 
+#  (add options here)
+###############################
+OPTION1="1"
+OPTION2="2"
+OPTION3="3"
+QUIT="q"
+menu = {
+OPTION1: "do 1",
+OPTION2: "do 2",
+OPTION3: "do 3",
+QUIT: "quit",
+}
+###############################
+#  init
+###############################
 class Thread(threading.Thread):
     def __init__(self, t, *args):
         threading.Thread.__init__(self, target=t, args=args)
         self.start()
 
-###############################
-#  init
-###############################
 if(len(sys.argv) == 1):
     print "Usage: python cli_batt_charger.py /dev/tty[NAME]"
     print "       you might need to change permissions to access the port, hint: chmod "
@@ -38,22 +57,6 @@ else:
     print("Error opening port")
     sys.exit()
 
-###############################
-#  options for user 
-#  (add options here)
-###############################
-OPTION1="1"
-OPTION2="2"
-OPTION3="3"
-QUIT="q"
-
-menu = {
-OPTION1: "do 1",
-OPTION2: "do 2",
-OPTION3: "do 3",
-QUIT: "quit",
-}
-###############################
 def print_menu():
     for item in menu:
         print item,
@@ -61,6 +64,12 @@ def print_menu():
         print menu[item]
     print "====================================="
 
+
+###############################
+#  thread to read user requests
+#  program will loop here until
+#  option QUIT is selected
+###############################  
 def read_keyboard():
     global quitflag
     while (quitflag == False):
