@@ -11,9 +11,13 @@ class Thread(threading.Thread):
     def __init__(self, t, *args):
         threading.Thread.__init__(self, target=t, args=args)
         self.start()
-        
+
+###############################
+#  init
+###############################
 if(len(sys.argv) == 1):
     print "Usage: python cli_batt_charger.py /dev/tty[NAME]"
+    print "       you might need to change permissions to access the port, hint: chmod "
     print "       ========================================="
     sys.exit()
 
@@ -33,6 +37,10 @@ if(ser.isOpen()):
 else:
     print("Error opening port")
     sys.exit()
+
+###############################
+#  options for user 
+#  (add options here)
 ###############################
 OPTION1="1"
 OPTION2="2"
@@ -51,6 +59,7 @@ def print_menu():
         print item,
         print ") ",
         print menu[item]
+    print "====================================="
 
 def read_keyboard():
     global quitflag
@@ -59,14 +68,22 @@ def read_keyboard():
         user_input= raw_input('Select option :')
         if (user_input == ""):
             continue
-        elif (user_input[0] == QUIT):
-            quitflag = True
+        #read only first character typed by user
+        if user_input[0] in menu:
+            print menu[user_input[0]]
+            if (user_input[0] == QUIT):
+                quitflag = True
         else:
+            print "====================================="
+            print("invalid input")
+            print "====================================="
             continue
-        
+
+###############################
+#  thread to read serial port
+###############################        
 def read_serial():
     global quitflag
-    print "read_serial"
     while (quitflag == False):
         line = ser.readline()
         if( line == ""):
@@ -74,17 +91,18 @@ def read_serial():
         else:
             print line
 
+###############################
+#  thread to write to serial
+###############################        
 def write_serial():
     global quitflag
-    print "write_serial"
     while (quitflag == False):
         #ser.write("serial_data_sent\n")
         time.sleep(1)
         
-    
-
-
-
+###############################
+#  create threads
+###############################        
 thread = Thread(read_keyboard)
 thread = Thread(read_serial)
 thread = Thread(write_serial)
